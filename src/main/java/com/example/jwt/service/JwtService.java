@@ -1,6 +1,7 @@
 package com.example.jwt.service;
 
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -24,12 +25,12 @@ public class JwtService {
    //토큰 생성
     public String create(
             Map<String, Object> claims, //Key, Value
-            LocalDateTime expireAt
+            LocalDateTime expireAt      //만료일자
     ){
-        var key = Keys.hmacShaKeyFor(secretKey.getBytes()); //
-        var _expireAt = Date.from(expireAt.atZone(ZoneId.systemDefault()).toInstant());
+        var key = Keys.hmacShaKeyFor(secretKey.getBytes()); //암호화
+        var _expireAt = Date.from(expireAt.atZone(ZoneId.systemDefault()).toInstant());  //->>LocalDateTime -> Date 타입으로
 
-        return Jwts.builder()
+        return Jwts.builder() //JsonWebToken
                 .signWith(key, SignatureAlgorithm.HS256)
                 .setClaims(claims)
                 .setExpiration(_expireAt)
@@ -40,25 +41,28 @@ public class JwtService {
     public void validation(String token){
 
         var key = Keys.hmacShaKeyFor(secretKey.getBytes());
-        var parser = Jwts.parserBuilder()
+        var parser = Jwts.parserBuilder()  //Parser 생성
                 .setSigningKey(key)
                 .build();
-        try {
-            var result = parser.parseClaimsJws(token); //토큰파싱
-            result.getBody().entrySet().forEach(value -> {
+
+      try {
+            var result = parser.parseClaimsJws(token);
+
+            //get Header, Body, Signature
+            result.getBody().entrySet().forEach(value -> { //body 의 데이터 출력
                 log.info("key:{}, value:{}", value.getKey(), value.getValue());
                 //{중괄호} 기준으로 값 입력
             });
 
-        }catch (Exception e){
+        }catch (Exception e){ //토큰 사인 에러
             if (e instanceof SignatureException){
-                    throw new RuntimeException("JWT Token Not Value Exception");
+                    throw new RuntimeException("Invalid JWT Token Signature Exception");
 
-            }else if(e instanceof ExpiredJwtException){
-                throw new RuntimeException("JWT Token Not Value Exception");
+            }else if(e instanceof ExpiredJwtException){ //토큰 만료 에러
+                throw new RuntimeException("Expired JWT Token Exception");
 
             }else {
-                throw  new RuntimeException("JWT Token Not Value Exception");
+                throw  new JwtException("JWT Token Validation Exception");
             }
         }
 

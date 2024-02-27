@@ -22,22 +22,21 @@ class JwtApplicationTests {
 	}
 
 	@Test
-	void tokenCreate(){
+	void tokenCreate(){  // 토큰 생성 : 유저정보, 만료일시
 		var claims = new HashMap<String, Object>();
 		claims.put("user_id", 923);
 
 		var expireAt = LocalDateTime.now().plusMinutes(30);
 		//10분 동안만 유효
 
-		var jwtToken = jwtService.create(claims, expireAt);
-
+		var jwtToken = jwtService.create(claims, expireAt); //토큰생성
 		System.out.println(jwtToken);
-
 	}
 
 	@Test
-	void tokenValidation(String token){
-
+	void tokenValidation(){
+		var token = "eyJhbGciOiJIUzI1NiJ9.eyJ1c2VyX2lkIjo5MjMsImV4cCI6MTcwOTA2MTI2MX0.tTQzz8hrZgFctMIhPSmmKTrHlrbRaw_eHjfMQfHYQVY";
+		jwtService.validation(token);
 
 	}
 }
